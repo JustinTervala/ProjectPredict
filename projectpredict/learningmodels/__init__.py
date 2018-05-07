@@ -1,0 +1,1 @@
+from .scikit import GaussianProcessRegressorModel

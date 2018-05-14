@@ -1,6 +1,7 @@
-from projectpredict.task import TimeUnits
-from projectpredict.pdf import DurationPdf, GaussianPdf
 from collections import OrderedDict
+
+from projectpredict.pdf import DurationPdf, GaussianPdf
+from projectpredict.task import TimeUnits
 
 
 class GaussianProcessRegressorModel(object):

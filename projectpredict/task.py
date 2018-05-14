@@ -1,7 +1,7 @@
 from __future__ import division
-from uuid import uuid4
-from scipy.stats import norm
+
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 from projectpredict.pdf import GaussianPdf, TimeUnits, DurationPdf, DatePdf
 
@@ -17,6 +17,7 @@ class Entity(object):
         uid (UUID, optional): The UUID of the object
         name (str, optional): The name of the object
     """
+
     def __init__(self, uid=None, name=''):
         self.uid = uid or uuid4()
         self.name = name
@@ -56,6 +57,7 @@ class Task(Entity):
         data (optional): Any data associated with this task.
         deadline_weight (int, optional): The weight attached to meeting this task's deadline
     """
+
     def __init__(
             self,
             name,
@@ -127,7 +129,7 @@ class Task(Entity):
             std (float): The standard deviation of the distribution
             units (TimeUnits, optional): The units of time of the variance. Defaults to TimeUnits.seconds
         """
-        self.earliest_start_date_pdf = DatePdf(mean_datetime, GaussianPdf(0, std**2), units=units)
+        self.earliest_start_date_pdf = DatePdf(mean_datetime, GaussianPdf(0, std ** 2), units=units)
 
     def set_latest_finish_pdf(self, mean_datetime, std, units=TimeUnits.seconds):
         """Sets the latest finish date pdf as a normal distribution about a mean date.
@@ -137,7 +139,7 @@ class Task(Entity):
             std (float): The standard deviation of the distribution
             units (TimeUnits, optional): The units of time of the variance. Defaults to TimeUnits.seconds
         """
-        self.latest_finish_date_pdf = DatePdf(mean_datetime, GaussianPdf(0, std**2), units=units)
+        self.latest_finish_date_pdf = DatePdf(mean_datetime, GaussianPdf(0, std ** 2), units=units)
 
     def get_duration_sample(self, current_time):
         """Gets a sample of the duration.
@@ -205,4 +207,4 @@ class Task(Entity):
         """
         mean = (best_case + 4 * estimated + worst_case) / 6
         std = (worst_case - best_case) / 6
-        return cls(name, duration_pdf=DurationPdf(GaussianPdf(mean, std**2), units=units), **kwargs)
+        return cls(name, duration_pdf=DurationPdf(GaussianPdf(mean, std ** 2), units=units), **kwargs)

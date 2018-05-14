@@ -1,6 +1,7 @@
 from datetime import timedelta
 from enum import Enum
 from math import fabs, sqrt
+
 from scipy.stats import norm
 
 
@@ -203,6 +204,7 @@ class DurationPdf(object):
         pdf: A probability density function object
         units (TimeUnits, optional): The units to use for the duration. Defaults to TimeUnits.seconds
     """
+
     def __init__(self, pdf, units=TimeUnits.seconds):
         self.pdf = pdf
         self.units = units
@@ -246,6 +248,7 @@ class DatePdf(object):
         pdf: A probability density function object
         units (TimeUnits, optional): The units to use for pdf samples. Defaults to TimeUnits.seconds
     """
+
     def __init__(self, mean_datetime, pdf, units=TimeUnits.seconds):
         self.mean_datetime = mean_datetime
         self.pdf = pdf

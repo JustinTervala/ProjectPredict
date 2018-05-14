@@ -1,9 +1,7 @@
-from projectpredict.task import *
-from projectpredict.pdf import *
-
-from datetime import datetime, timedelta
-from pytest import fixture
 import mock
+from pytest import fixture
+
+from projectpredict.task import *
 
 
 @fixture

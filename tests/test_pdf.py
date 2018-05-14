@@ -1,8 +1,9 @@
 from datetime import timedelta, datetime
 
-from projectpredict.pdf import GaussianPdf, DeterministicPdf, TimeUnits, DurationPdf, DatePdf, SciPyPdf
 import pytest
 from scipy.stats import halfnorm
+
+from projectpredict.pdf import GaussianPdf, DeterministicPdf, TimeUnits, DurationPdf, DatePdf, SciPyPdf
 
 
 def test_scipy_pdf_init():
@@ -116,7 +117,8 @@ def test_duration_sample_with_minimum(mocker):
 
 def test_duration_pdf_equals():
     assert DurationPdf(GaussianPdf(10, 4)) == DurationPdf(GaussianPdf(10, 4))
-    assert DurationPdf(GaussianPdf(10, 4), units=TimeUnits.seconds) != DurationPdf(GaussianPdf(10, 4), units=TimeUnits.days)
+    assert DurationPdf(GaussianPdf(10, 4), units=TimeUnits.seconds) != DurationPdf(GaussianPdf(10, 4),
+                                                                                   units=TimeUnits.days)
     assert DurationPdf(GaussianPdf(10, 4)) != DurationPdf(GaussianPdf(10, 3))
 
 
@@ -129,15 +131,19 @@ def test_date_pdf(mocker):
 
 def test_date_pdf_with_units(mocker):
     mocker.patch.object(GaussianPdf, 'sample', return_value=0.25)
-    date = datetime(year=2018, month=5, day=12,  hour=12)
+    date = datetime(year=2018, month=5, day=12, hour=12)
     pdf = DatePdf(date, GaussianPdf(0, 1), units=TimeUnits.days)
     assert pdf.sample() == date + timedelta(days=0.25)
 
 
 def test_date_pdf_equals():
-    date = datetime(year=2018, month=5, day=12,  hour=12)
-    assert DatePdf(date, GaussianPdf(0, 1), units=TimeUnits.days) == DatePdf(date, GaussianPdf(0, 1), units=TimeUnits.days)
-    date2 = datetime(year=2017, month=5, day=12,  hour=12)
-    assert DatePdf(date, GaussianPdf(0, 1), units=TimeUnits.days) != DatePdf(date2, GaussianPdf(0, 1), units=TimeUnits.days)
-    assert DatePdf(date, GaussianPdf(0, 1), units=TimeUnits.days) != DatePdf(date, GaussianPdf(10, 1), units=TimeUnits.days)
-    assert DatePdf(date, GaussianPdf(0, 1), units=TimeUnits.days) != DatePdf(date, GaussianPdf(10, 1), units=TimeUnits.seconds)
+    date = datetime(year=2018, month=5, day=12, hour=12)
+    assert DatePdf(date, GaussianPdf(0, 1), units=TimeUnits.days) == DatePdf(date, GaussianPdf(0, 1),
+                                                                             units=TimeUnits.days)
+    date2 = datetime(year=2017, month=5, day=12, hour=12)
+    assert DatePdf(date, GaussianPdf(0, 1), units=TimeUnits.days) != DatePdf(date2, GaussianPdf(0, 1),
+                                                                             units=TimeUnits.days)
+    assert DatePdf(date, GaussianPdf(0, 1), units=TimeUnits.days) != DatePdf(date, GaussianPdf(10, 1),
+                                                                             units=TimeUnits.days)
+    assert DatePdf(date, GaussianPdf(0, 1), units=TimeUnits.days) != DatePdf(date, GaussianPdf(10, 1),
+                                                                             units=TimeUnits.seconds)

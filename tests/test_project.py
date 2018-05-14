@@ -1,9 +1,11 @@
+from datetime import datetime, timedelta
+
+import numpy as np
+import pytest
+
 from projectpredict.pdf import DeterministicPdf
 from projectpredict.project import *
 from projectpredict.task import *
-import pytest
-from datetime import datetime, timedelta
-import numpy as np
 
 
 def make_deterministic_date_pdf(date, value):
@@ -73,11 +75,12 @@ def simple_project():
 
 def test_datetime_stats():
     current_date = datetime(year=2019, month=4, day=13)
-    days = [1,2,3]
+    days = [1, 2, 3]
     datetimes = [current_date + timedelta(days=day) for day in days]
     expected_variance = np.var([(date - datetime.utcfromtimestamp(0)).total_seconds() for date in datetimes])
     stats = datetime_stats(datetimes)
-    assert stats == {'mean': current_date + timedelta(days=np.mean(days)),'variance': timedelta(seconds=expected_variance)}
+    assert stats == {'mean': current_date + timedelta(days=np.mean(days)),
+                     'variance': timedelta(seconds=expected_variance)}
 
 
 def test_timedelta_variance():
@@ -138,6 +141,7 @@ def test_invalid_project():
 
 def test_init():
     class MockModel: pass
+
     model = MockModel()
     project = Project('important_proc', model=model)
     assert project.name == 'important_proc'
@@ -283,7 +287,7 @@ def test_calculate_earliest_finish_times(project):
         tasks['5']: 6,
         tasks['6']: 7
     }
-    expected_times = {task: [current_time + timedelta(days=days)]*iterations
+    expected_times = {task: [current_time + timedelta(days=days)] * iterations
                       for task, days in expected_times.items()}
     assert times == expected_times
 
@@ -367,9 +371,9 @@ def test_calculate_task_statistics(project):
     expected_earliest_finish = {task: {'mean': current_time + timedelta(days=days), 'variance': timedelta(days=0)}
                                 for task, days in expected_earliest_finish.items()}
     expected_latest_start = {task: {'mean': current_time + timedelta(days=days), 'variance': timedelta(days=0)}
-                                for task, days in expected_latest_start.items()}
+                             for task, days in expected_latest_start.items()}
     expected_total_float = {task: {'mean': timedelta(days=days), 'variance': timedelta(days=0)}
-                             for task, days in expected_total_float.items()}
+                            for task, days in expected_total_float.items()}
     assert {task: stat.earliest_finish for task, stat in stats.items()} == expected_earliest_finish
     assert {task: stat.latest_start for task, stat in stats.items()} == expected_latest_start
     assert {task: stat.total_float for task, stat in stats.items()} == expected_total_float
@@ -453,7 +457,9 @@ def test_project_from_dict_with_tasks_with_durations():
                 (task3, task6)]]
     }
 
-    class MockModel: pass
+    class MockModel:
+        pass
+
     model = MockModel()
     proj = Project.from_dict(data_in, model)
     assert proj.uid is not None
@@ -520,7 +526,7 @@ def test_project_update_from_dict_remove_task_add_task(simple_project):
     task4 = Task('4', data={'a': 4})
     tasks = [task for task in task_lookup.values() if task.name != '2']
     tasks.append(task4)
-    edges =[edge for edge in project.edges if edge[0].name != '2']
+    edges = [edge for edge in project.edges if edge[0].name != '2']
     edges.append((task3, task4))
     dependencies_json = [{'source': edge[0].uid, 'destination': edge[1].uid} for edge in edges]
     update_data = {
@@ -545,7 +551,7 @@ def test_project_update_from_dict_remove_task_add_task(simple_project):
 def test_project_update_from_dict_remove_edge(simple_project):
     task_lookup = simple_project[1]
     project = simple_project[0]
-    edges =[edge for edge in project.edges if edge[0].name != '2']
+    edges = [edge for edge in project.edges if edge[0].name != '2']
     dependencies_json = [{'source': edge[0].uid, 'destination': edge[1].uid} for edge in edges]
     update_data = {
         'uid': project.uid,

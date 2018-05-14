@@ -1,10 +1,14 @@
 from __future__ import division
-import networkx as nx
-from datetime import datetime, timedelta
-import numpy as np
+
 from collections import namedtuple
+from datetime import datetime, timedelta
 from itertools import combinations
 from uuid import uuid4
+
+import networkx as nx
+import numpy as np
+
+from projectpredict.exceptions import InvalidProject
 
 ExpectedCompletionTimeSamples = namedtuple('ExpectedCompletionTimeSamples', ['samples', 'is_final_task'])
 Statistic = namedtuple('Statistic', ['mean', 'var'])
@@ -145,23 +149,6 @@ class TaskStatistics(object):
 DependencySummary = namedtuple('DependencySummary', ['source', 'destination'])
 
 
-class InvalidProject(Exception):
-    """Exception thrown when a project is determined to be invalid
-
-    Attributes:
-        errors(list[str]|str): The errors found with the Project
-
-    Args:
-        errors(list[str]|str): The errors found with the Project
-    """
-    def __init__(self, errors):
-        super(InvalidProject, self).__init__()
-        self.errors = errors
-
-    def __repr__(self):
-        return 'Project is invalid. Errors: {}'.format(self.errors)
-
-
 class Project(nx.DiGraph):
     """A project
 
@@ -181,6 +168,7 @@ class Project(nx.DiGraph):
         dependencies (iterable(dict), optional): The dependencies associated with the project in the form of dicts of
             'source' and 'destination' keys.
     """
+
     def __init__(self, name, model=None, uid=None, tasks=None, dependencies=None):
         super(Project, self).__init__()
         self.uid = uid or uuid4()
@@ -453,7 +441,7 @@ class Project(nx.DiGraph):
         if not max_number:
             max_number = len(possible_tasks)
         scores = {}
-        for n in reversed(range(min_number, max_number+1)):
+        for n in reversed(range(min_number, max_number + 1)):
             for task_set in (task_set for task_set in combinations(possible_tasks, n)
                              if all(constraint(self, task_set) for constraint in constraints)):
                 mean_durations = {task: task.mean_duration for task in task_set}
@@ -474,7 +462,8 @@ class Project(nx.DiGraph):
     def _default_recommendation_score_func(samples, **kwargs):
         task_float_stats = {task: timedelta_stats([sample.total_float for sample in task_samples])
                             for task, task_samples in samples.items()}
-        float_score = sum(score['mean'].total_seconds()*task.deadline_weight for task, score in task_float_stats.items())
+        float_score = sum(
+            score['mean'].total_seconds() * task.deadline_weight for task, score in task_float_stats.items())
         precision = sum(1 / max(score['variance'].total_seconds(), 1e-6) * task.deadline_weight
                         for task, score in task_float_stats.items())
         return {'total_float_score': float_score, 'precision': precision}
@@ -486,13 +475,13 @@ class Project(nx.DiGraph):
             min_score = min(score[field] for score in scores.values())
             max_score = max(score[field] for score in scores.values())
             score_diff = max_score - min_score
-            return {task_set: (score[field] - min_score)/max(score_diff, 1e-6) for task_set, score in scores.items()}
+            return {task_set: (score[field] - min_score) / max(score_diff, 1e-6) for task_set, score in scores.items()}
 
         float_scores = scale_scores('total_float_score')
         precision_scores = scale_scores('precision')
         risk_tolerance = kwargs.get('risk_tolerance', 0.5)
         combined_scores = {
-            task_set: risk_tolerance*float_scores[task_set] + (1-risk_tolerance)*precision_scores[task_set]
+            task_set: risk_tolerance * float_scores[task_set] + (1 - risk_tolerance) * precision_scores[task_set]
             for task_set in scores}
         return max(combined_scores, key=combined_scores.get)
 
@@ -505,7 +494,8 @@ class Project(nx.DiGraph):
         if 'name' in data:
             self.name = data['name']
         new_tasks = data.get('tasks', [])
-        new_dependencies = [(dependency['source'], dependency['destination']) for dependency in data.get('dependencies', [])]
+        new_dependencies = [(dependency['source'], dependency['destination']) for dependency in
+                            data.get('dependencies', [])]
         for task in new_tasks:
             if task not in self.tasks:
                 self.add_task(task)

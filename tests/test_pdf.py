@@ -24,7 +24,7 @@ def test_scipy_pdf_sample(mocker):
     pdf = SciPyPdf(halfnorm_pdf)
     mock_rvs = mocker.patch.object(pdf.pdf, 'rvs')
     pdf.sample()
-    mock_rvs.assert_called_once()
+    pdf.pdf.rvs.assert_called_once_with()
 
 
 def test_gaussian_pdf():

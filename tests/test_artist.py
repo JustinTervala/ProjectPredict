@@ -85,8 +85,8 @@ def test_artist_base_find_optimal_distance(large_project_with_stats):
 def test_artist_base_find_best_neighbor_task(large_project):
     project, tasks = large_project
     relevant_positions = {
-        tasks['1']: ([1], [2]),
-        tasks['2']: ([3], [4])
+        tasks['1']: (1, 2),
+        tasks['2']: (3, 4)
     }
     assert ArtistBase._find_best_neighbor_task(relevant_positions) == tasks['2']
 
@@ -220,27 +220,27 @@ def test_matplotlib_artist_create_color_converter_total_float(large_project_with
     project, tasks, stats = large_project_with_stats
     artist = MatplotlibArtist(project)
     colormap, convert = artist._create_color_converter('binary', 'total_float', stats)
-    assert convert(stats[tasks['1']].total_float) == stats[tasks['1']].total_float['mean'].total_seconds()
-    assert colormap.to_rgba(convert(stats[tasks['1']].total_float)) == (1.0, 1.0, 1.0, 1.0)
-    assert colormap.to_rgba(convert(stats[tasks['8']].total_float)) == (0.0, 0.0, 0.0, 1.0)
+    assert convert(stats[tasks['1']].total_float['mean']) == stats[tasks['1']].total_float['mean'].total_seconds()
+    assert colormap.to_rgba(convert(stats[tasks['1']].total_float['mean'])) == (1.0, 1.0, 1.0, 1.0)
+    assert colormap.to_rgba(convert(stats[tasks['8']].total_float['mean'])) == (0.0, 0.0, 0.0, 1.0)
 
 
 def test_matplotlib_artist_create_color_converter_latest_start(large_project_with_stats):
     project, tasks, stats = large_project_with_stats
     artist = MatplotlibArtist(project)
     colormap, convert = artist._create_color_converter('binary', 'latest_start', stats)
-    assert convert(stats[tasks['1']].latest_start) == ArtistBase._date_to_timestamp(stats[tasks['1']].latest_start['mean'])
-    assert colormap.to_rgba(convert(stats[tasks['1']].latest_start)) == (1.0, 1.0, 1.0, 1.0)
-    assert colormap.to_rgba(convert(stats[tasks['8']].latest_start)) == (0.0, 0.0, 0.0, 1.0)
+    assert convert(stats[tasks['1']].latest_start['mean']) == ArtistBase._date_to_timestamp(stats[tasks['1']].latest_start['mean'])
+    assert colormap.to_rgba(convert(stats[tasks['1']].latest_start['mean'])) == (1.0, 1.0, 1.0, 1.0)
+    assert colormap.to_rgba(convert(stats[tasks['8']].latest_start['mean'])) == (0.0, 0.0, 0.0, 1.0)
 
 
 def test_matplotlib_artist_create_color_converter_earliest_finish(large_project_with_stats):
     project, tasks, stats = large_project_with_stats
     artist = MatplotlibArtist(project)
     colormap, convert = artist._create_color_converter('binary', 'earliest_finish', stats)
-    assert convert(stats[tasks['1']].earliest_finish) == ArtistBase._date_to_timestamp(stats[tasks['1']].earliest_finish['mean'])
-    assert colormap.to_rgba(convert(stats[tasks['1']].earliest_finish)) == (0.0, 0.0, 0.0, 1.0)
-    assert colormap.to_rgba(convert(stats[tasks['8']].earliest_finish)) == (1.0, 1.0, 1.0, 1.0)
+    assert convert(stats[tasks['1']].earliest_finish['mean']) == ArtistBase._date_to_timestamp(stats[tasks['1']].earliest_finish['mean'])
+    assert colormap.to_rgba(convert(stats[tasks['1']].earliest_finish['mean'])) == (0.0, 0.0, 0.0, 1.0)
+    assert colormap.to_rgba(convert(stats[tasks['8']].earliest_finish['mean'])) == (1.0, 1.0, 1.0, 1.0)
 
 
 def test_matplotlib_artist_adjust_ticks():
@@ -276,77 +276,11 @@ def test_matplotlib_artist_add_variance_bars(large_project_with_stats):
         assert line.get_zorder() == -1
 
 
-def test_matplotlib_artist_draw_invalid_shade(large_project_with_stats):
-    project, _tasks, _stats = large_project_with_stats
+def test_matplotlib_artist_draw_invalid_shade(large_project):
+    project, _tasks = large_project
     artist = MatplotlibArtist(project)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as e:
         artist.draw(shade='invalid')
-
-
-def test_matplotlib_artist_draw(large_project_with_stats, mocker):
-    project, tasks, stats = large_project_with_stats
-    artist = MatplotlibArtist(project)
-    fig, ax = plt.subplots()
-    mocker.patch.object(artist.project, 'calculate_task_statistics', return_value=stats)
-    mock_subplots = mocker.patch.object(artist._plt, 'subplots', return_value=(fig, ax))
-    mock_var = mocker.patch.object(artist, '_add_variance_bars')
-    mock_vline = mocker.patch.object(ax, 'axvline')
-    mock_show = mocker.patch.object(artist._plt, 'show')
-    current_time = datetime(year=2018, month=6, day=3)
-    ret_fig, ret_ax = artist.draw(current_time=current_time)
-    mock_subplots.assert_called_once()
-    mock_var.assert_called_once()
-    mock_vline.assert_called_once_with(x=ArtistBase._date_to_timestamp(current_time))
-    mock_show.assert_called()
-    assert ret_fig == fig
-    assert ret_ax == ax
-
-
-def test_matplotlib_artist_draw_less(large_project_with_stats, mocker):
-    project, tasks, stats = large_project_with_stats
-    artist = MatplotlibArtist(project)
-    fig, ax = plt.subplots()
-    mocker.patch.object(artist.project, 'calculate_task_statistics', return_value=stats)
-    mock_subplots = mocker.patch.object(artist._plt, 'subplots', return_value=(fig, ax))
-    mock_var = mocker.patch.object(artist, '_add_variance_bars')
-    mock_vline = mocker.patch.object(ax, 'axvline')
-    mock_show = mocker.patch.object(artist._plt, 'show')
-    current_time = datetime(year=2018, month=6, day=3)
-    ret_fig, ret_ax = artist.draw(
-        current_time=current_time,
-        show_current_time=False,
-        show_plot=False,
-        show_variance=False)
-    mock_subplots.assert_called_once()
-    mock_var.assert_not_called()
-    mock_vline.assert_not_called()
-    mock_show.assert_not_called()
-    assert ret_fig == fig
-    assert ret_ax == ax
-
-def test_matplotlib_artist_draw_with_stats(large_project_with_stats, mocker):
-    project, tasks, stats = large_project_with_stats
-    artist = MatplotlibArtist(project)
-    fig, ax = plt.subplots()
-    mock_stats = mocker.patch.object(artist.project, 'calculate_task_statistics', return_value=stats)
-    mock_subplots = mocker.patch.object(artist._plt, 'subplots', return_value=(fig, ax))
-    mock_var = mocker.patch.object(artist, '_add_variance_bars')
-    mock_vline = mocker.patch.object(ax, 'axvline')
-    mock_show = mocker.patch.object(artist._plt, 'show')
-    current_time = datetime(year=2018, month=6, day=3)
-    ret_fig, ret_ax = artist.draw(
-        current_time=current_time,
-        stats=stats,
-        show_current_time=False,
-        show_plot=False,
-        show_variance=False)
-    mock_stats.assert_not_called()
-    mock_subplots.assert_called_once()
-    mock_var.assert_not_called()
-    mock_vline.assert_not_called()
-    mock_show.assert_not_called()
-    assert ret_fig == fig
-    assert ret_ax == ax
 
 
 def test_matplotlib_artist_init_import_error(mocker):

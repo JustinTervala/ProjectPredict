@@ -3,10 +3,6 @@ from math import sqrt, fabs
 
 import networkx as nx
 
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcol
-import matplotlib.cm as cm
-
 
 class ArtistBase(object):
     """Base class for artists. Contains methods to help determine the positions of the tasks
@@ -208,7 +204,7 @@ class MatplotlibArtist(ArtistBase):
                 positions,
                 ax=ax,
                 nodelist=[task],
-                node_color=color_converter.to_rgba(convert(getattr(stats[task], shade))))
+                node_color=color_converter.to_rgba(convert(getattr(stats[task], shade)['mean'])))
         nx.draw_networkx_labels(self.project, positions, ax=ax, labels={task: task.name for task in self.project.tasks})
         nx.draw_networkx_edges(self.project, positions, ax=ax)
 
@@ -228,15 +224,15 @@ class MatplotlibArtist(ArtistBase):
 
     def _create_color_converter(self, colormap, shade, stats):
         min_max = (
-            min(getattr(stat, shade) for stat in stats.values()),
-            max(getattr(stat, shade) for stat in stats.values())
+            min(getattr(stat, shade)['mean'] for stat in stats.values()),
+            max(getattr(stat, shade)['mean'] for stat in stats.values())
         )
         if shade == 'total_float':
             def convert(task_stat):
-                return task_stat['mean'].total_seconds()
+                return task_stat.total_seconds()
         else:
             def convert(task_stat):
-                return ArtistBase._date_to_timestamp(task_stat['mean'])
+                return ArtistBase._date_to_timestamp(task_stat)
         min_max = [convert(val) for val in min_max]
         low_better = shade == 'earliest_finish'
         color_converter = self._get_color_converter(min_max, low_better, colormap)

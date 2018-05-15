@@ -1,4 +1,7 @@
 language: python
+env:
+  global:
+    - CC_TEST_REPORTER=e5d2fe68ae21b85a913d2888186b91396999f636c74f97f913108bb8e0fad078
 python:
   - "2.7"
   - "3.5"
@@ -9,9 +12,15 @@ install:
   - pip install -r requirements-dev.txt
 
 before_script: # configure a headless display to test plot generation
-- "export DISPLAY=:99.0"
-- "sh -e /etc/init.d/xvfb start"
-- sleep 3 # give xvfb some time to start
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 
 script:
   - pytest --cov=projectpredict
+
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

@@ -16,7 +16,7 @@ Or, using `Pipenv <https://docs.pipenv.org>`_, the new officially recommended st
 Development Installation
 ------------------------
 
-Currently the only way to install ProjectPredict is to clone it from GitHub.
+Currently the only way to install ProjectPredict for development is to clone it from GitHub.
 
 .. Link to GitHub
 
@@ -60,7 +60,7 @@ typing "pytest"
 
 .. code-block:: bash
 
-    pytest
+    pytest --cov=projectpredict
 
 Building the Documentation
 --------------------------

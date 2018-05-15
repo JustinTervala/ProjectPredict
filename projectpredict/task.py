@@ -196,9 +196,9 @@ class Task(Entity):
 
         Args:
             name (str): The name of the task
-            best_case (float): The best case duration of the task
+            best_case (float): The estimated best case duration of the task
             estimated (float): The estimated duration of the task
-            worst_case (float): The worst case duration of the task
+            worst_case (float): The estimated worst case duration of the task
             units (TimeUnits, optional): The units of time used in the estimation. Defaults to TimeUnits.seconds
             **kwargs: Arguments to be passed into Task constructor
 

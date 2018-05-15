@@ -1,6 +1,6 @@
 import os
 from setuptools import setup
-
+from projectpredict import __version__
 
 # Utility function to read the README file.
 # Used for the long_description.  It's nice, because now 1) we have a top level
@@ -11,13 +11,14 @@ def read(fname):
 
 setup(
     name="projectpredict",
-    version="0.0.1",
+    version=__version__,
     author="Justin Tervala",
     author_email="jgtervala@gmail.com",
     description="A library to help schedule projectes intelligently.",
     license="MIT",
-    keywords="project management",
+    keywords=["scheduling", "project management"],
     url="https://github.com/JustinTervala/ProjectPredict",
+    download_url = 'https://github.com/JustinTervala/ProjectPredict/archive/{}.tar.gz'.format(__version__),
     packages=['projectpredict'],
     long_description=read('README.md'),
     classifiers=[

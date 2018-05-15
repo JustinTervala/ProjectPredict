@@ -16,3 +16,7 @@ networks](https://www.pmi.org/learning/library/project-scheduling-approach-incor
 The easiest way to install ProjectPredict is to install it from PyPI using pip
 
 `pip install projectpredict`
+
+## Documentation
+
+More information can be found [here](http://projectpredict.readthedocs.io/en/latest/)

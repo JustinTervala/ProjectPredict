@@ -11,16 +11,23 @@ def read(fname):
 
 setup(
     name="projectpredict",
-    version=__version__,
+    version=__version__ + 'a1',
     author="Justin Tervala",
     author_email="jgtervala@gmail.com",
     description="A library to help schedule projectes intelligently.",
     license="MIT",
     keywords=["scheduling", "project management"],
     url="https://github.com/JustinTervala/ProjectPredict",
-    download_url = 'https://github.com/JustinTervala/ProjectPredict/archive/{}.tar.gz'.format(__version__),
+    #download_url='https://github.com/JustinTervala/ProjectPredict/archive/v{}.tar.gz'.format(__version__),
     packages=['projectpredict'],
     long_description=read('README.md'),
+    install_requires=[
+        'scipy',
+        'networkx',
+        'scikit-learn',
+        'matplotlib',
+        'pandas'
+    ],
     classifiers=[
         "Development Status :: 3 - Alpha",
         'Topic :: Office/Business :: Scheduling',

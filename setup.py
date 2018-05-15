@@ -32,6 +32,14 @@ setup(
         'networkx>=2.0',
         'scikit-learn>=0.18',
     ],
+    extras_require={
+        'dev': [
+            'pytest',
+            'pytest-cov',
+            'pytest-mock',
+            'mock'
+        ]
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         'Topic :: Office/Business :: Scheduling',

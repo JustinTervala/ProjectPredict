@@ -3,10 +3,6 @@ from math import sqrt, fabs
 
 import networkx as nx
 
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcol
-import matplotlib.cm as cm
-
 
 class ArtistBase(object):
     """Base class for artists. Contains methods to help determine the positions of the tasks

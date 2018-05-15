@@ -1,6 +1,5 @@
 import os
 from setuptools import setup
-from projectpredict._version import __version__
 
 
 # Utility function to read the README file.
@@ -11,7 +10,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-version = __version__
+version = '0.0.1a2'
 
 setup(
     name="projectpredict",

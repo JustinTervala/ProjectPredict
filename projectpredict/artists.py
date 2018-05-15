@@ -3,6 +3,10 @@ from math import sqrt, fabs
 
 import networkx as nx
 
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcol
+import matplotlib.cm as cm
+
 
 class ArtistBase(object):
     """Base class for artists. Contains methods to help determine the positions of the tasks
@@ -18,8 +22,8 @@ class ArtistBase(object):
         self.project = project
 
     @staticmethod
-    def _date_stat_to_timestamp(stat, attribute='latest_start'):
-        return (getattr(stat, attribute)['mean'] - datetime.utcfromtimestamp(0)).total_seconds()
+    def _date_to_timestamp(date):
+        return (date - datetime.utcfromtimestamp(0)).total_seconds()
 
     def _find_optimal_distance(self, stats):
         """Finds the best distance between nodes.
@@ -34,21 +38,17 @@ class ArtistBase(object):
         Returns:
             float: The optimal distance between nodes.
         """
-        start_tasks = []
-        terminal_tasks = []
-        for task in self.project.tasks:
-            if len(list(self.project.predecessors(task))) == 0:
-                start_tasks.append(task)
-            if len(list(self.project.successors(task))) == 0:
-                terminal_tasks.append(task)
-        max_path, max_path_length = self._find_longest_path(start_tasks, terminal_tasks)
-        greatest_time_difference = fabs(self._date_stat_to_timestamp(stats[max_path[1]])
-                                        - self._date_stat_to_timestamp(stats[max_path[0]]))
+        start_tasks, terminal_tasks = self.project.get_starting_and_terminal_tasks()
+        earliest_latest_start = min(stats[task].latest_start['mean'] for task in start_tasks)
+        latest_latest_start = max(stats[task].latest_start['mean'] for task in terminal_tasks)
+        greatest_time_difference = fabs(self._date_to_timestamp(latest_latest_start)
+                                        - self._date_to_timestamp(earliest_latest_start))
+
+        max_path_length = self._find_longest_path_length(start_tasks, terminal_tasks)
         optimal_distance = greatest_time_difference / max_path_length
         return optimal_distance
 
-    def _find_longest_path(self, start_tasks, terminal_tasks):
-        max_path = (None, None)
+    def _find_longest_path_length(self, start_tasks, terminal_tasks):
         max_path_length = float('-inf')
         for start_task in start_tasks:
             for terminal_task in terminal_tasks:
@@ -59,11 +59,11 @@ class ArtistBase(object):
                 except nx.NetworkXNoPath:
                     continue
                 if path_length > max_path_length:
-                    max_path = (start_task, terminal_task)
                     max_path_length = path_length
-        return max_path, max_path_length
 
-    def _get_positions(self, stats):
+        return max_path_length
+
+    def get_positions(self, stats):
 
         optimal_distance = self._find_optimal_distance(stats)
 
@@ -73,16 +73,29 @@ class ArtistBase(object):
             first_task: [(stats[first_task].latest_start['mean'] - datetime.utcfromtimestamp(0)).total_seconds(), 0]}
         for task in task_generator:
             x_position = (stats[task].latest_start['mean'] - datetime.utcfromtimestamp(0)).total_seconds()
-            y_position = self._find_best_y_position(optimal_distance, positions, stats, task, x_position)
+            y_position = self._find_best_y_position(optimal_distance, positions, task, x_position)
             positions[task] = [x_position, y_position]
         return positions
 
-    def _find_best_y_position(self, optimal_distance, positions, stats, task, x_position):
+    def _find_best_y_position(self, optimal_distance, positions, task, x_position):
         """
         The optimal Y position is found by first finding the best task for the new task to be positioned near and
         solving the equation for a circle centered at that task's position with a radius equal to the optimal_distance
         for the y-variable.
         """
+        relevant_positions = self._get_relevant_positions(task, positions, x_position, optimal_distance)
+        if relevant_positions:
+            max_task = self._find_best_neighbor_task(relevant_positions)
+            y_position = self._calculate_y_position(positions[max_task], x_position, optimal_distance)
+        else:
+            y_position = 0
+        return y_position
+
+    @staticmethod
+    def _calculate_y_position(best_task_position, x_position, optimal_distance):
+        return best_task_position[1] + sqrt(optimal_distance ** 2 - (x_position - best_task_position[0]) ** 2)
+
+    def _get_relevant_positions(self, task, positions, x_position, optimal_distance):
         relevant_positions = {task_: pos for task_, pos in positions.items() if
                               fabs(pos[0] - x_position) <= optimal_distance}
         if relevant_positions:
@@ -90,29 +103,21 @@ class ArtistBase(object):
                 task_: pos for task_, pos in relevant_positions.items() if task_ in self.project.predecessors(task)}
             if connected_tasks:
                 relevant_positions = connected_tasks
-
-            max_task = self._find_best_neighbor_task(relevant_positions, stats)
-            y_position = (
-                    positions[max_task][1] +
-                    sqrt(optimal_distance ** 2 - (x_position - positions[max_task][0]) ** 2))
-        else:
-            y_position = 0
-        return y_position
+        return relevant_positions
 
     @staticmethod
-    def _find_best_neighbor_task(relevant_positions, stats):
+    def _find_best_neighbor_task(relevant_positions):
         max_start = float('-inf')
         max_task = None
         for task_, pos in relevant_positions.items():
-            start = (stats[task_].latest_start['mean'] - datetime.utcfromtimestamp(0)).total_seconds()
-            if start > max_start:
-                max_start = start
+            if pos[0] > max_start:
+                max_start = pos[0]
                 max_task = task_
         return max_task
 
 
 class MatplotlibArtist(ArtistBase):
-    """Draws a project using MatplotLib
+    """Draws a project using Matplotlib
 
     Note:
         There are still several issues with this artist. The task labels only fit a single letter, so the names often
@@ -133,17 +138,11 @@ class MatplotlibArtist(ArtistBase):
         except ImportError:
             print('Matplotlib must be installed to use the MatplotlibArtist')
             raise
-        try:
-            from scipy.optimize import minimize_scalar
-        except ImportError:
-            print('Scipy must be installed to use the MatplotlibArtist')
-            raise
         super(MatplotlibArtist, self).__init__(project)
         self.project = project
         self._plt = plt
         self._colors = mcol
         self._colormap = cm
-        self._minimize = minimize_scalar
 
     def _get_color_converter(self, bounds, low_better, colormap):
         if low_better:
@@ -188,11 +187,12 @@ class MatplotlibArtist(ArtistBase):
         allowed_shaders = ('total_float', 'latest_start', 'earliest_finish')
         if shade not in allowed_shaders:
             raise ValueError('shade {} not allowed. Allowed shaders are {}'.format(shade, allowed_shaders))
+        current_time = current_time or datetime.utcnow()
         stats = stats or self.project.calculate_task_statistics(current_time=current_time, iterations=iterations)
 
         color_converter, convert = self._create_color_converter(colormap, shade, stats)
 
-        positions = self._get_positions(stats)
+        positions = self.get_positions(stats)
 
         fig, ax = self._plt.subplots()
 
@@ -200,7 +200,7 @@ class MatplotlibArtist(ArtistBase):
             self._add_variance_bars(ax, positions, stats)
 
         if show_current_time:
-            ax.axvline(x=(current_time - datetime.utcfromtimestamp(0)).total_seconds())
+            ax.axvline(x=ArtistBase._date_to_timestamp(current_time))
 
         for task in self.project.tasks:
             nx.draw_networkx_nodes(
@@ -236,9 +236,9 @@ class MatplotlibArtist(ArtistBase):
                 return task_stat['mean'].total_seconds()
         else:
             def convert(task_stat):
-                return (task_stat['mean'] - datetime.utcfromtimestamp(0)).total_seconds()
+                return ArtistBase._date_to_timestamp(task_stat['mean'])
         min_max = [convert(val) for val in min_max]
-        low_better = shade == 'latest_start'
+        low_better = shade == 'earliest_finish'
         color_converter = self._get_color_converter(min_max, low_better, colormap)
         return color_converter, convert
 

@@ -1,3 +1,5 @@
+from __future__ import division
+
 import mock
 from pytest import fixture
 
@@ -153,7 +155,7 @@ def test_task_from_pert():
     worst_case = 10
     mean = (best_case + 4 * estimated + worst_case) / 6
     std = (worst_case - best_case) / 6
-    expected_duration = DurationPdf(GaussianPdf(mean, std**2))
+    expected_duration = DurationPdf(GaussianPdf(mean, std ** 2))
     task = Task.from_pert('task1', best_case, estimated, worst_case)
     assert task.name == 'task1'
     assert task.duration_pdf == expected_duration

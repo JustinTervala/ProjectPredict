@@ -5,6 +5,8 @@ from sklearn import gaussian_process
 from projectpredict import TimeUnits, DurationPdf
 from projectpredict.learningmodels import GaussianProcessRegressorModel
 from projectpredict.pdf import GaussianPdf
+import mock
+import sys
 
 
 def test_init():
@@ -12,6 +14,15 @@ def test_init():
     assert isinstance(model.model, gaussian_process.GaussianProcessRegressor)
     assert not model.is_trained
     assert model.units == TimeUnits.seconds
+
+
+def test_init_import_error(mocker):
+    with mock.patch.dict(sys.modules, {'sklearn': None}):
+        with pytest.raises(ImportError):
+            GaussianProcessRegressorModel()
+    with mock.patch.dict(sys.modules, {'pandas': None}):
+        with pytest.raises(ImportError):
+            GaussianProcessRegressorModel()
 
 
 def test_init_with_units():
@@ -64,6 +75,7 @@ def test_train_with_list(mocker):
 
 def test_predict_untrained():
     model = GaussianProcessRegressorModel()
+    model.is_trained = False
     with pytest.raises(ValueError):
         model.train([1, 2, 3], [4, 5, 6])
 

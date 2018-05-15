@@ -485,6 +485,22 @@ class Project(nx.DiGraph):
             for task_set in scores}
         return max(combined_scores, key=combined_scores.get)
 
+    def get_starting_and_terminal_tasks(self):
+        """Gets the starting tasks (ones without predecessors) and terminal tasks (ones without successors)
+
+        Returns:
+            tuple(list[Task], list[Task]): The starting and terminal tasks in the form of
+                (starting tasks, terminal tasks)
+        """
+        start_tasks = []
+        terminal_tasks = []
+        for task in self.tasks:
+            if len(list(self.predecessors(task))) == 0:
+                start_tasks.append(task)
+            if len(list(self.successors(task))) == 0:
+                terminal_tasks.append(task)
+        return start_tasks, terminal_tasks
+
     def update_from_dict(self, data):
         """Updates the Project using a dictionary of new values
 

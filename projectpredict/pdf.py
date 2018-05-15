@@ -62,7 +62,7 @@ class GaussianPdf(SciPyPdf):
         Returns:
             GaussianPdf: The constructed Gaussian PDF
         """
-        return cls(dict_in['mean'], sqrt(dict_in['variance']))
+        return cls(dict_in['mean'], dict_in['variance'])
 
     def to_dict(self):
         """Gets a dictionary representation of this PDF

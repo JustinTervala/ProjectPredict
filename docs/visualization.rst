@@ -36,7 +36,7 @@ arguments respectively.
 Custom Visualizations
 ---------------------
 No interface must be satisfied to make your own visualizations, but an ArtistBase class has been provided which supplies
-a function, _get_positions(), which generates a timeline-like graph of the project based on the latest start date for
+a function, get_positions(), which generates a timeline-like graph of the project based on the latest start date for
 each task in the project. You can choose to extend from this base class or not.
 
 

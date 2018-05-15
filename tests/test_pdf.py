@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 import pytest
 from scipy.stats import halfnorm
 
-from projectpredict.pdf import GaussianPdf, DeterministicPdf, TimeUnits, DurationPdf, DatePdf, SciPyPdf
+from projectpredict.pdf import *
 
 
 def test_scipy_pdf_init():
@@ -46,6 +46,12 @@ def test_gaussian_pdf_from_dict():
     assert pdf.variance - 100 <= 1e-6
 
 
+def test_gaussian_pdf_to_dict():
+    pdf = GaussianPdf(12, 100)
+    expected = {'mean': 12, 'variance': 100}
+    assert pdf.to_dict() == expected
+
+
 def test_deterministic_pdf():
     value = 42
     pdf = DeterministicPdf(value)
@@ -56,6 +62,17 @@ def test_deterministic_pdf():
 
 def test_deterministic_pdf_equals():
     assert DeterministicPdf(12) == DeterministicPdf(12)
+
+
+def test_deterministic_pdf_from_dict():
+    dict_in = {'mean': 12}
+    pdf = DeterministicPdf.from_dict(dict_in)
+    assert pdf.mean == 12
+
+def test_deterministic_pdf_to_dict():
+    pdf = DeterministicPdf(12)
+    expected = {'mean': 12}
+    assert pdf.to_dict() == expected
 
 
 @pytest.mark.parametrize('test_input, expected', [
@@ -85,6 +102,24 @@ def test_time_units_from_string(test_input, expected):
 def test_time_units_from_string_invalid_str():
     with pytest.raises(ValueError):
         TimeUnits.from_string('invalid')
+
+
+def test_pdf_factory_invalid():
+    with pytest.raises(KeyError):
+        PdfFactory.create('invalid', {'a': 32})
+
+
+def test_pdf_factory_gaussian():
+    pdf = PdfFactory.create(GaussianPdf.type, {'mean': 32, 'variance': 100})
+    assert isinstance(pdf, GaussianPdf)
+    assert pdf.mean == 32
+    assert pdf.variance == 100
+
+
+def test_pdf_factory_deterministic():
+    pdf = PdfFactory.create(DeterministicPdf.type, {'mean': 13})
+    assert isinstance(pdf, DeterministicPdf)
+    assert pdf.mean == 13
 
 
 def test_duration_pdf(mocker):
@@ -127,6 +162,7 @@ def test_date_pdf(mocker):
     date = datetime(year=2018, month=5, day=12)
     pdf = DatePdf(date, GaussianPdf(0, 1))
     assert pdf.sample() == date + timedelta(seconds=0.25)
+    assert pdf.mean == date
 
 
 def test_date_pdf_with_units(mocker):

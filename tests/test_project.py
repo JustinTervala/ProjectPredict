@@ -1,19 +1,9 @@
-from datetime import datetime, timedelta
-
-import numpy as np
 import pytest
 
 from projectpredict.pdf import DeterministicPdf
 from projectpredict.project import *
 from projectpredict.task import *
-
-
-def make_deterministic_date_pdf(date, value):
-    return DatePdf(date, DeterministicPdf(value), units=TimeUnits.days)
-
-
-def task_factory(name, value):
-    return Task(name, duration_pdf=DurationPdf(DeterministicPdf(value), units=TimeUnits.days))
+from tests.util import make_deterministic_date_pdf, task_factory, MockModel
 
 
 @pytest.fixture
@@ -49,6 +39,8 @@ def project():
     return proj, {task.name: task for task in [task1, task2, task3, task4, task5, task6]}
 
 
+
+
 @pytest.fixture
 def simple_project():
     '''
@@ -61,10 +53,6 @@ def simple_project():
     task3 = task_factory('3', 3)
     current_time = datetime(year=2018, month=5, day=14)
     task3.latest_finish_date_pdf = make_deterministic_date_pdf(current_time, 5)
-
-    class MockModel:
-        def predict(self, data):
-            return DurationPdf(DeterministicPdf(data['a']))
 
     proj = Project('proj', MockModel())
     proj.add_dependencies([
@@ -422,6 +410,29 @@ def test_project_recommendation_invalid_graph(project):
     tasks['4'].latest_finish_date_pdf = None
     with pytest.raises(InvalidProject):
         project.recommend_next(iterations=5)
+
+
+def test_project_get_starting_and_terminal_tasks():
+    project = Project('proj', MockModel())
+    tasks = {str(i): Task(str(i), data={'a': i}) for i in range(1, 9)}
+    start_tasks = [tasks['1'], tasks['2']]
+    terminal_tasks = [tasks['5'], tasks['7'], tasks['8']]
+    current_date = datetime.utcnow()
+    for task in terminal_tasks:
+        task.latest_finish_date_pdf = make_deterministic_date_pdf(current_date, 1)
+
+    # Longest path will be {1, 2}-3-4-6-{7, 8}
+    project.add_dependencies([
+        (tasks['1'], tasks['3']),
+        (tasks['2'], tasks['3']),
+        (tasks['3'], tasks['4']),
+        (tasks['4'], tasks['5']),
+        (tasks['4'], tasks['6']),
+        (tasks['6'], tasks['7']),
+        (tasks['6'], tasks['8'])
+    ])
+    found_start, found_terminal = project.get_starting_and_terminal_tasks()
+    assert (set(found_start), set(found_terminal)) == (set(start_tasks), set(terminal_tasks))
 
 
 def test_project_from_dict_no_tasks():

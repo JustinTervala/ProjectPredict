@@ -10,7 +10,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-version = '0.0.1a3'
+version = '0.0.1'
 
 setup(
     name="projectpredict",
@@ -31,6 +31,7 @@ setup(
         'matplotlib>=2.0.0',
         'networkx>=2.0',
         'scikit-learn>=0.18',
+        'enum34'
     ],
     extras_require={
         'dev': [

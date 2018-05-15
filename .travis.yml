@@ -20,7 +20,7 @@ before_script: # configure a headless display to test plot generation
   - ./cc-test-reporter before-build
 
 script:
-  - pytest --cov=projectpredict
+  - pytest --cov=projectpredict --cov-report=xml
 
 after_script:
   - ./cc-test-reporter after-build -t coverage.py --exit-code $TRAVIS_TEST_RESULT

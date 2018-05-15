@@ -2,6 +2,7 @@
 [![Build Status](https://travis-ci.org/JustinTervala/ProjectPredict.svg?branch=master)](https://travis-ci.org/JustinTervala/ProjectPredict)
 [![Maintainability](https://api.codeclimate.com/v1/badges/888401889e781419c249/maintainability)](https://codeclimate.com/github/JustinTervala/ProjectPredict/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/888401889e781419c249/test_coverage)](https://codeclimate.com/github/JustinTervala/ProjectPredict/test_coverage)
+[![PyPI version](https://badge.fury.io/py/projectpredict.svg)](https://badge.fury.io/py/projectpredict)
 
 ProjectPredict is a library to help project managers gain insight into the status of their project using Bayesian
 networks. It is inspired by the paper ["Project scheduling: Improved approach to incorporate uncertainty using Bayesian

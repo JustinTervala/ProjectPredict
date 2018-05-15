@@ -348,17 +348,20 @@ class Project(nx.DiGraph):
             samples = {task: TaskSample.from_task(task, current_time) for task in self.nodes}
             if forward_sample_func:
                 for task in nx.topological_sort(self):
-                    parents = list(parent for parent in self.predecessors(task) if not parent.is_completed)
-                    children = list(child for child in self.successors(task) if not child.is_completed)
+                    children, parents = self._get_parents_and_children(task)
                     forward_sample_func(task, parents, children, samples, **kwargs)
             if backward_sample_func:
                 for task in reversed(list(nx.topological_sort(self))):
-                    parents = list(parent for parent in self.predecessors(task) if not parent.is_completed)
-                    children = list(child for child in self.successors(task) if not child.is_completed)
+                    children, parents = self._get_parents_and_children(task)
                     backward_sample_func(task, parents, children, samples, **kwargs)
             for task, sample in samples.items():
                 sample_collection[task].append(sample)
         return sample_collection
+
+    def _get_parents_and_children(self, task):
+        parents = list(parent for parent in self.predecessors(task) if not parent.is_completed)
+        children = list(child for child in self.successors(task) if not child.is_completed)
+        return children, parents
 
     def calculate_task_statistics(self, current_time=None, iterations=1000):
         self.validate()
@@ -417,23 +420,6 @@ class Project(nx.DiGraph):
         if not constraints:
             constraints = []
 
-        def recommendation_sample_func(task, parents, children, samples, **kwargs):
-            tasks_under_sample = kwargs['tasks_under_sample']
-            if task in kwargs['tasks_under_sample']:
-                earliest_finish = samples[task].earliest_start + samples[task].duration
-            else:
-                if not parents:
-                    if kwargs['batch_wait']:
-                        additional_wait = min(samples[task_].duration for task_ in tasks_under_sample)
-                    else:
-                        additional_wait = max(samples[task_].duration for task_ in tasks_under_sample)
-                    earliest_finish = samples[task].earliest_start + samples[task].duration + additional_wait
-                else:
-                    earliest_start = (max(samples[parent_task].earliest_finish for parent_task in parents))
-                    samples[task].earliest_start = earliest_start
-                    earliest_finish = earliest_start + samples[task].duration
-            samples[task].earliest_finish = earliest_finish
-
         possible_tasks = [node for node in self.nodes
                           if not node.is_completed
                           and not [parent_node for parent_node in self.predecessors(node)
@@ -446,7 +432,7 @@ class Project(nx.DiGraph):
                              if all(constraint(self, task_set) for constraint in constraints)):
                 mean_durations = {task: task.mean_duration for task in task_set}
                 samples = self._get_samples(
-                    forward_sample_func=recommendation_sample_func,
+                    forward_sample_func=self.recommendation_sample_func,
                     backward_sample_func=self.latest_start_sample_func,
                     current_time=current_time,
                     iterations=iterations,
@@ -457,6 +443,24 @@ class Project(nx.DiGraph):
         if not scores:
             raise ValueError('No tasks found which meet constraints')
         return selection_func(scores, **selection_func_arguments)
+
+    @staticmethod
+    def recommendation_sample_func(task, parents, children, samples, **kwargs):
+        tasks_under_sample = kwargs['tasks_under_sample']
+        if task in kwargs['tasks_under_sample']:
+            earliest_finish = samples[task].earliest_start + samples[task].duration
+        else:
+            if not parents:
+                if kwargs['batch_wait']:
+                    additional_wait = min(samples[task_].duration for task_ in tasks_under_sample)
+                else:
+                    additional_wait = max(samples[task_].duration for task_ in tasks_under_sample)
+                earliest_finish = samples[task].earliest_start + samples[task].duration + additional_wait
+            else:
+                earliest_start = (max(samples[parent_task].earliest_finish for parent_task in parents))
+                samples[task].earliest_start = earliest_start
+                earliest_finish = earliest_start + samples[task].duration
+        samples[task].earliest_finish = earliest_finish
 
     @staticmethod
     def _default_recommendation_score_func(samples, **kwargs):
